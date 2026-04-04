@@ -287,7 +287,8 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
             mtkView.isPaused = true
             mtkView.enableSetNeedsDisplay = true
             mtkView.framebufferOnly = true
-            mtkView.colorPixelFormat = .bgra8Unorm
+            mtkView.colorPixelFormat = .bgra8Unorm_srgb
+            mtkView.colorspace = CGColorSpace(name: CGColorSpace.sRGB)
             let renderer = try MetalTerminalRenderer(view: mtkView, terminalView: self)
             mtkView.delegate = renderer
             if let caretView = caretView {

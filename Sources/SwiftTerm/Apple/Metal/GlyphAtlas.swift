@@ -33,9 +33,9 @@ enum GlyphAtlasFormat {
     var pixelFormat: MTLPixelFormat {
         switch self {
         case .grayscale:
-            return .r8Unorm
+            return .r8Unorm_srgb
         case .bgra:
-            return .bgra8Unorm
+            return .bgra8Unorm_srgb
         }
     }
 }

@@ -1806,6 +1806,20 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
         }
     }
 
+    private static func srgbToLinear(_ value: Float) -> Float {
+        if value <= 0.04045 {
+            return value / 12.92
+        }
+        return pow((value + 0.055) / 1.055, 2.4)
+    }
+
+    private static func linearizeSRGB(_ color: SIMD4<Float>) -> SIMD4<Float> {
+        return SIMD4<Float>(srgbToLinear(color.x),
+                            srgbToLinear(color.y),
+                            srgbToLinear(color.z),
+                            color.w)
+    }
+
     private func colorToSIMD(_ color: TTColor) -> SIMD4<Float> {
         #if os(macOS)
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
@@ -1814,28 +1828,26 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
         var b: CGFloat = 0
         var a: CGFloat = 1
         rgb.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return SIMD4<Float>(Float(r), Float(g), Float(b), Float(a))
+        return MetalTerminalRenderer.linearizeSRGB(SIMD4<Float>(Float(r), Float(g), Float(b), Float(a)))
         #else
         var r: CGFloat = 0
         var g: CGFloat = 0
         var b: CGFloat = 0
         var a: CGFloat = 1
         if color.getRed(&r, green: &g, blue: &b, alpha: &a) {
-            return SIMD4<Float>(Float(r), Float(g), Float(b), Float(a))
+            return MetalTerminalRenderer.linearizeSRGB(SIMD4<Float>(Float(r), Float(g), Float(b), Float(a)))
         }
         let cgColor = color.cgColor
         let components = cgColor.components ?? [0, 0, 0, 1]
         if components.count >= 4 {
-            return SIMD4<Float>(Float(components[0]),
+            return MetalTerminalRenderer.linearizeSRGB(SIMD4<Float>(Float(components[0]),
                                 Float(components[1]),
                                 Float(components[2]),
-                                Float(components[3]))
+                                Float(components[3])))
         }
         if components.count == 2 {
-            return SIMD4<Float>(Float(components[0]),
-                                Float(components[0]),
-                                Float(components[0]),
-                                Float(components[1]))
+            let gray = MetalTerminalRenderer.srgbToLinear(Float(components[0]))
+            return SIMD4<Float>(gray, gray, gray, Float(components[1]))
         }
         return SIMD4<Float>(0, 0, 0, 1)
         #endif

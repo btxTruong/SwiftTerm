@@ -377,7 +377,7 @@ open class TerminalView: UIScrollView, UITextInputTraits, UIKeyInput, UIScrollVi
             mtkView.isPaused = true
             mtkView.enableSetNeedsDisplay = true
             mtkView.framebufferOnly = true
-            mtkView.colorPixelFormat = .bgra8Unorm
+            mtkView.colorPixelFormat = .bgra8Unorm_srgb
             mtkView.isUserInteractionEnabled = false
             let renderer = try MetalTerminalRenderer(view: mtkView, terminalView: self)
             mtkView.delegate = renderer
