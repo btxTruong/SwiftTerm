@@ -281,8 +281,8 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
         self.cellTextGrayPipeline = cellTextGrayPipeline
         self.cellColorPipeline = cellColorPipeline
         let samplerDesc = MTLSamplerDescriptor()
-        samplerDesc.minFilter = .linear
-        samplerDesc.magFilter = .linear
+        samplerDesc.minFilter = .nearest
+        samplerDesc.magFilter = .nearest
         samplerDesc.sAddressMode = .clampToEdge
         samplerDesc.tAddressMode = .clampToEdge
         guard let sampler = device.makeSamplerState(descriptor: samplerDesc) else {
@@ -1134,6 +1134,7 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
                 let runFont = runAttributes[.font] as? TTFont ?? terminalView.fontSet.normal
                 let ctFont = runFont as CTFont
                 let startColumn = shaped.segment.column + (processedGlyphs * shaped.segment.columnWidth)
+                let alignedLineOriginPxX = round(lineOriginPx.x)
 
                 let textColor = runAttributes[.foregroundColor] as? TTColor ?? terminalView.nativeForegroundColor
                 let textColorSIMD = colorToSIMD(textColor)
@@ -1150,11 +1151,10 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
                             continue
                         }
                         let ctPos = glyphRun.positions[i]
+                        // Position glyphs on integer cell grid to prevent gaps between text runs
                         let glyphColumn = startColumn + ((drawnGlyphsInRun + i) * shaped.segment.columnWidth)
-                        let basePos = CGPoint(x: lineOrigin.x + (cellWidth * CGFloat(glyphColumn)),
-                                              y: lineOrigin.y + yOffset + ctPos.y)
-                        let pxX = basePos.x * scale + entry.bearing.x
-                        let pxY = basePos.y * scale + entry.bearing.y
+                        let pxX = alignedLineOriginPxX + CGFloat(glyphColumn * baseCellWidthPx) + entry.bearing.x
+                        let pxY = round((lineOrigin.y + yOffset + ctPos.y) * scale) + entry.bearing.y
 
                         let x0 = pxX
                         let y0 = pxY
@@ -2168,10 +2168,9 @@ final class MetalTerminalRenderer: NSObject, MTKViewDelegate {
                     continue
                 }
                 let ctPos = coreTextPositions[i]
-                let basePos = CGPoint(x: lineOrigin.x + cellWidth * doublePosition * CGFloat(buffer.x),
-                                      y: lineOrigin.y + yOffset + ctPos.y)
-                let pxX = basePos.x * scale + entry.bearing.x
-                let pxY = basePos.y * scale + entry.bearing.y
+                // Round to device pixels for consistent rendering with nearest-neighbor filtering
+                let pxX = round((lineOrigin.x + cellWidth * doublePosition * CGFloat(buffer.x)) * scale) + entry.bearing.x
+                let pxY = round((lineOrigin.y + yOffset + ctPos.y) * scale) + entry.bearing.y
                 let x0 = Float(pxX)
                 let y0 = Float(pxY)
                 let x1 = x0 + Float(entry.size.width)

@@ -122,20 +122,23 @@ final class GlyphAtlas {
         }
     }
 
+    // 1px padding prevents nearest-neighbor filtering from sampling adjacent glyphs at boundaries
+    private static let glyphPadding = 1
+
     private func reserve(width: Int, height: Int) -> AtlasRegion? {
         guard width <= size, height <= size else {
             return nil
         }
         if nextX + width > size {
             nextX = 0
-            nextY += rowHeight
+            nextY += rowHeight + Self.glyphPadding
             rowHeight = 0
         }
         guard nextY + height <= size else {
             return nil
         }
         let region = AtlasRegion(x: nextX, y: nextY, width: width, height: height)
-        nextX += width
+        nextX += width + Self.glyphPadding
         rowHeight = max(rowHeight, height)
         return region
     }
