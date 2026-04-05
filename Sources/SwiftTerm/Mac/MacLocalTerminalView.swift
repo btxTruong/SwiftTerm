@@ -122,7 +122,12 @@ open class LocalProcessTerminalView: TerminalView, TerminalViewDelegate, LocalPr
     public func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {
         processDelegate?.hostCurrentDirectoryUpdate(source: source, directory: directory)
     }
-    
+
+    open func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {
+        if let url = URL(string: link) {
+            NSWorkspace.shared.open(url)
+        }
+    }
 
     /**
      * This method is invoked when input from the user needs to be sent to the client
