@@ -153,7 +153,7 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     }
 #endif
 
-    public var cellDimension: CellDimension!
+    var cellDimension: CellDimension!
     var caretView: CaretView!
     public var terminal: Terminal!
 
