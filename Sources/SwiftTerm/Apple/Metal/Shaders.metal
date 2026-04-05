@@ -77,7 +77,8 @@ fragment float4 terminal_text_fragment_gray(GlyphOut in [[stage_in]],
                                             texture2d<float> atlas [[texture(0)]],
                                             sampler samp [[sampler(0)]]) {
     float coverage = atlas.sample(samp, in.texCoord).r;
-    coverage = pow(coverage, 1.0 / 0.9);
+    // Boost coverage to compensate for stem darkening lost during atlas-based rendering
+    coverage = pow(coverage, 0.9);
     return float4(in.color.rgb * coverage, in.color.a * coverage);
 }
 
