@@ -26,6 +26,7 @@ typealias TTFont = UIFont
 typealias TTRect = CGRect
 typealias TTBezierPath = UIBezierPath
 public typealias TTImage = UIImage
+public typealias TTEdgeInsets = UIEdgeInsets
 #endif
 
 #if os(macOS)
@@ -35,6 +36,7 @@ typealias TTFont = NSFont
 typealias TTRect = CGRect
 typealias TTBezierPath = NSBezierPath
 public typealias TTImage = NSImage
+public typealias TTEdgeInsets = NSEdgeInsets
 #endif
 
 /// Controls how links are discovered during pointer/hover tracking in terminal views.
@@ -180,7 +182,8 @@ extension TerminalView {
         if newSize.width == 0 && newSize.height == 0 {
             return false
         }
-        let newRows = Int (newSize.height / cellDimension.height)
+        let insetHeight = newSize.height - contentInsets.top - contentInsets.bottom
+        let newRows = Int (insetHeight / cellDimension.height)
         let newCols = Int (getEffectiveWidth (size: newSize) / cellDimension.width)
         
         if newCols != terminal.cols || newRows != terminal.rows {
@@ -1219,7 +1222,7 @@ extension TerminalView {
             }
             let renderMode = displayBuffer.lines [row].renderMode
             let lineOffset = calcLineOffset(forRow: row)
-            let lineOrigin = CGPoint(x: 0, y: frame.height - lineOffset)
+            let lineOrigin = CGPoint(x: contentInsets.left, y: frame.height - lineOffset - contentInsets.top)
 
             switch renderMode {
             case .single:

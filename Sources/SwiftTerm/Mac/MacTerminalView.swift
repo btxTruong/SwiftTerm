@@ -153,6 +153,12 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     }
 #endif
 
+    /// Insets applied around the terminal content area. The background fills the
+    /// full view; only the text grid is inset. Changing this triggers a resize.
+    public var contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0) {
+        didSet { _ = processSizeChange(newSize: frame.size) }
+    }
+
     var cellDimension: CellDimension!
     var caretView: CaretView!
     public var terminal: Terminal!
@@ -591,7 +597,7 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
 
     func getEffectiveWidth (size: CGSize) -> CGFloat
     {
-        return (size.width - scrollerWidth)
+        return (size.width - scrollerWidth - contentInsets.left - contentInsets.right)
     }
     
     open func scrolled(source terminal: Terminal, yDisp: Int) {
@@ -1740,8 +1746,8 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
     // NSTextInputClient protocol implementation
     open func characterIndex(for point: NSPoint) -> Int {
         let local = convert(point, from: nil)
-        let col = Int(local.x / cellDimension.width)
-        let row = Int((bounds.height - local.y) / cellDimension.height)
+        let col = Int((local.x - contentInsets.left) / cellDimension.width)
+        let row = Int((bounds.height - local.y - contentInsets.top) / cellDimension.height)
         return row * terminal.cols + col
     }
     
@@ -2018,8 +2024,8 @@ open class TerminalView: NSView, NSTextInputClient, NSUserInterfaceValidations, 
             return Position (col: Int (x), row: Int (bounds.height-y))
         }
         let displayBuffer = terminal.displayBuffer
-        let col = Int (point.x / cellDimension.width)
-        let row = Int ((frame.height-point.y) / cellDimension.height)
+        let col = Int ((point.x - contentInsets.left) / cellDimension.width)
+        let row = Int ((frame.height - point.y - contentInsets.top) / cellDimension.height)
         let colValue = min (max (0, col), terminal.cols-1)
         let bufferRow = row + displayBuffer.yDisp
         let maxRow = max (0, displayBuffer.lines.count - 1)
